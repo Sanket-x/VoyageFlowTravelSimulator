@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>VoyageFlow — Travel Simulator</title>
+
+  <!-- Optional Tailwind CDN (allowed by teacher) - comment out if you want pure CSS -->
+  <!-- <script src="https://cdn.tailwindcss.com"></script> -->
+
+  <style>
+    /* ---------- Simple, clean CSS (no frameworks required) ---------- */
+    :root{
+      --blue:#0b76d1;
+      --dark:#0f1724;
+      --muted:#6b7280;
+      --card:#ffffff;
+      --glass: rgba(255,255,255,0.9);
+      --accent1: linear-gradient(90deg,#0b76d1,#f08b1a);
+      --shadow: 0 8px 30px rgba(2,6,23,0.12);
+      font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(180deg,#0ea5e9 0%, #d1e8f8 60%); color:var(--dark); -webkit-font-smoothing:antialiased;}
+    .container{max-width:1100px;margin:0 auto;padding:30px;}
+    header{display:flex;align-items:center;justify-content:space-between;padding:18px 30px;background:transparent;position:sticky;top:0;z-index:50}
+    header .brand{font-weight:800;color:#fff;font-size:22px}
+    header nav a{margin-left:18px;color:rgba(255,255,255,0.95);text-decoration:none;padding:8px 14px;border-radius:12px}
+    header nav a.active{background:rgba(255,255,255,0.12);backdrop-filter: blur(6px)}
+    /* Page containers (simulate pages) */
+    .page{display:none;padding:40px 0}
+    .page.active{display:block}
+    /* ---------- Page 1: Registration form ---------- */
+    .hero{max-width:900px;margin:40px auto 60px;background:transparent;padding:20px;text-align:center;color:#fff}
+    .logo-bubble{width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,0.12);display:inline-flex;align-items:center;justify-content:center;margin:10px auto}
+    .logo-bubble svg{width:34px;height:34px;fill:white;opacity:0.95}
+    .title{font-size:44px;font-weight:800;margin:8px 0}
+    .subtitle{color:rgba(255,255,255,0.9);margin-bottom:30px}
+    .card{background:var(--card);border-radius:14px;padding:26px;box-shadow:var(--shadow);max-width:720px;margin:0 auto;color:var(--dark)}
+    label{display:block;font-weight:600;margin:12px 0 6px}
+    input{width:100%;padding:12px 14px;border-radius:10px;border:1px solid #e6e9ee;font-size:15px}
+    .err{color:#b91c1c;font-size:13px;margin-top:6px;display:none}
+    .btn{display:inline-block;padding:14px 22px;border-radius:12px;background:var(--blue);color:#fff;text-decoration:none;border:none;font-weight:700;cursor:pointer}
+    .btn.ghost{background:transparent;border:1px solid rgba(0,0,0,0.08);color:var(--dark)}
+    /* ---------- Blog page ---------- */
+    .blog-nav{position:sticky;top:0;background:white;padding:10px 0;box-shadow:0 4px 18px rgba(2,6,23,0.06);z-index:30;}
+    .tabs{display:flex;gap:14px;align-items:center}
+    .tabs a{padding:8px 14px;border-radius:20px;color:var(--dark);text-decoration:none}
+    .tabs a.active{background:var(--blue);color:white}
+    .section{display:flex;gap:30px;align-items:center;padding:48px 0;border-bottom:1px solid #f0f4f8}
+    .section img{width:48%;border-radius:14px;object-fit:cover;box-shadow:var(--shadow);height:260px}
+    .section .content{width:52%}
+    .section .content h2{font-size:38px;margin:0 0 14px}
+    .section .content p{color:var(--muted);line-height:1.7}
+    .to-next{display:block;margin:36px auto 18px;text-align:center}
+    /* ---------- Page 3: price calculator ---------- */
+    .grid{display:grid;grid-template-columns:1fr 380px;gap:28px;align-items:start}
+    .panel{background:white;border-radius:14px;padding:18px;box-shadow:var(--shadow)}
+    .option{display:flex;justify-content:space-between;align-items:center;padding:14px;border-radius:10px;border:1px solid #eef3f8;margin-bottom:12px}
+    .option input{margin-right:12px}
+    .total-card{background:linear-gradient(135deg,#0b76d1,#f08b1a);color:white;padding:22px;border-radius:14px;display:flex;justify-content:space-between;align-items:center}
+    .total-card h3{margin:0;font-size:28px}
+    .confirm-btn{background:rgba(255,255,255,0.9);color:var(--dark);padding:10px 18px;border-radius:10px;font-weight:700;border:none;cursor:pointer}
+    /* ---------- Page 4: Confirmation ---------- */
+    .thanks{background:white;border-radius:14px;padding:40px;text-align:center;box-shadow:var(--shadow)}
+    /* ---------- Modal ---------- */
+    .modal-back{position:fixed;inset:0;background:rgba(2,6,23,0.45);display:none;align-items:center;justify-content:center;z-index:60}
+    .modal-back.show{display:flex}
+    .modal{background:white;padding:24px;border-radius:12px;min-width:300px;max-width:520px;box-shadow:0 18px 50px rgba(2,6,23,0.35)}
+    .modal h3{margin-top:0}
+    /* Responsive */
+    @media(max-width:900px){
+      .section{flex-direction:column}
+      .section img,.section .content{width:100%}
+      .grid{grid-template-columns:1fr}
+      header{padding:10px 14px}
+      .title{font-size:34px}
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header with simple nav (anchors are used on blog page sections) -->
+  <header>
+    <div class="brand" style="color:white">VoyageFlow</div>
+    <nav>
+      <a href="#" id="nav-home" class="active" onclick="showPage(1)">Home</a>
+      <a href="#" id="nav-blog" onclick="showPage(2)">Destinations</a>
+      <a href="#" id="nav-calc" onclick="showPage(3)">Calculator</a>
+      <a href="#" id="nav-final" onclick="showPage(4)">Confirmation</a>
+    </nav>
+  </header>
+
+  <!-- PAGE 1: Registration -->
+  <main class="page active" id="page-1">
+    <div class="hero container">
+      <div class="logo-bubble">
+        <svg viewBox="0 0 24 24"><path d="M12 2l3 7h6l-4.9 3.6L19 21 12 16l-7 5 2.9-8.4L3 9h6z"/></svg>
+      </div>
+      <div class="title">VoyageFlow</div>
+      <div class="subtitle">Begin Your Journey</div>
+    </div>
+
+    <div class="container">
+      <div class="card" id="reg-card">
+        <form id="regForm" novalidate>
+          <label for="fullname">Full Name</label>
+          <input id="fullname" name="fullname" type="text" placeholder="John Doe" required>
+          <div class="err" id="err-name">Please enter your name.</div>
+
+          <label for="email">Email Address</label>
+          <input id="email" name="email" type="email" placeholder="john@example.com" required>
+          <div class="err" id="err-email">Enter a valid email (user@domain.com).</div>
+
+          <label for="phone">Phone Number</label>
+          <input id="phone" name="phone" type="tel" placeholder="10-digit number" maxlength="10" required>
+          <div class="err" id="err-phone">Phone must be exactly 10 digits.</div>
+
+          <label for="pin">PIN Code</label>
+          <input id="pin" name="pin" type="text" placeholder="6-digit PIN" maxlength="6" required>
+          <div class="err" id="err-pin">PIN must be exactly 6 digits.</div>
+
+          <div style="margin-top:20px;text-align:center">
+            <button type="submit" class="btn">Start Your Adventure</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <!-- PAGE 2: Blog / Destinations -->
+  <section class="page" id="page-2">
+    <div class="blog-nav">
+      <div class="container">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-weight:700;color:var(--dark)">VoyageFlow</div>
+          <div class="tabs" id="blogTabs">
+            <a href="#paris" data-target="paris" class="active">Paris</a>
+            <a href="#tokyo" data-target="tokyo">Tokyo</a>
+            <a href="#bali" data-target="bali">Bali</a>
+            <a href="#rome" data-target="rome">Rome</a>
+            <a href="#dubai" data-target="dubai">Dubai</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container" style="background:white;padding:28px;border-radius:10px;margin-top:20px">
+      <div id="paris" class="section">
+        <div class="content">
+          <small style="color:var(--blue)">France</small>
+          <h2>Paris</h2>
+          <p>The City of Light beckons with its iconic Eiffel Tower, world-class museums, and romantic Seine river cruises. Discover charming cafés, exquisite pastries, and the timeless elegance of Parisian architecture.</p>
+          <div style="margin-top:14px"><button class="btn" onclick="scrollToNext('tokyo')">Explore Paris →</button></div>
+        </div>
+        <img src="Images/paris.jpg" alt="Paris">
+      </div>
+
+      <div id="tokyo" class="section">
+        <img src="Images/tokyo.jpg" alt="Tokyo">
+        <div class="content">
+          <small style="color:#fb923c">Japan</small>
+          <h2>Tokyo</h2>
+          <p>Where ancient tradition meets cutting-edge technology. Experience serene temples, neon-lit neighborhoods, and incredible cuisine from sushi to street-food delights.</p>
+          <div style="margin-top:14px"><button class="btn" onclick="scrollToNext('bali')">Explore Tokyo →</button></div>
+        </div>
+      </div>
+
+      <div id="bali" class="section">
+        <div class="content">
+          <small style="color:#16a34a">Indonesia</small>
+          <h2>Bali</h2>
+          <p>Green terraces, spiritual retreats and serene beaches — Bali is paradise for relaxation and adventure lovers alike.</p>
+          <div style="margin-top:14px"><button class="btn" onclick="scrollToNext('rome')">Explore Bali →</button></div>
+        </div>
+        <img src="Images/bali.jpg" alt="Bali">
+      </div>
+      <div id="rome" class="section">
+        <img src="Images/rome.jpg" alt="Rome">
+        <div class="content">
+          <small style="color:#c2410c">Italy</small>
+          <h2>Rome</h2>
+          <p>Walk through layers of history, from the Colosseum to Vatican treasures — a living museum of classical art and architecture.</p>
+          <div style="margin-top:14px"><button class="btn" onclick="scrollToNext('dubai')">Explore Rome →</button></div>
+        </div>
+      </div>
+
+      <div id="dubai" class="section">
+        <div class="content">
+          <small style="color:#f97316">UAE</small>
+          <h2>Dubai</h2>
+          <p>A futuristic oasis in the desert, Dubai dazzles with record-breaking architecture like the Burj Khalifa, luxury shopping, and pristine beaches.</p>
+          <div style="margin-top:14px"><button class="btn" onclick="goToPage(3)">Next: Build Your Trip →</button></div>
+        </div>
+        <img src="Images/dubai.jpg" alt="Dubai">
+      </div>
+
+    </div>
+  </section>
+
+  <!-- PAGE 3: Trip Itinerary & Calculator -->
+  <section class="page" id="page-3">
+    <div class="container">
+      <h1 style="text-align:center;margin:18px 0 8px">Choose Your Options</h1>
+      <p style="text-align:center;color:var(--muted);margin-bottom:28px">Select travel items and watch the total update instantly.</p>
+
+      <div class="grid">
+        <div>
+          <div class="panel">
+            <h3>Travel Options</h3>
+            <div class="option"><label><input type="radio" name="flight" data-price="500" value="Economy"> Economy Flight</label><strong>$500</strong></div>
+            <div class="option"><label><input type="radio" name="flight" data-price="1500" value="Business"> Business Class Flight</label><strong>$1500</strong></div>
+            <div class="option"><label><input type="radio" name="flight" data-price="3000" value="First"> First Class Flight</label><strong>$3000</strong></div>
+
+            <h3 style="margin-top:16px">Food Packages</h3>
+            <div class="option"><label><input type="checkbox" class="price-checkbox" data-price="80" value="Local Food Tour"> Local Food Tour</label><strong>$80</strong></div>
+            <div class="option"><label><input type="checkbox" class="price-checkbox" data-price="160" value="Gourmet Dining"> Gourmet Dining</label><strong>$160</strong></div>
+
+            <h3 style="margin-top:16px">Activities & Experiences</h3>
+            <div class="option"><label><input type="checkbox" class="price-checkbox" data-price="100" value="Museum Pass"> Museum Pass (5 days)</label><strong>$100</strong></div>
+            <div class="option"><label><input type="checkbox" class="price-checkbox" data-price="300" value="Private Tour"> Private Guided Tour</label><strong>$300</strong></div>
+            <div class="option"><label><input type="checkbox" class="price-checkbox" data-price="250" value="Adventure"> Adventure Activities</label><strong>$250</strong></div>
+            <div class="option"><label><input type="checkbox" class="price-checkbox" data-price="350" value="Spa"> Luxury Spa Package</label><strong>$350</strong></div>
+
+            <div style="margin-top:12px">
+              <button class="btn" onclick="confirmSelections()">Confirm & Continue</button>
+            </div>
+          </div>
+        </div>
+
+        <aside>
+          <div class="panel total-card">
+            <div>
+              <div style="opacity:0.9">Total Package Price</div>
+              <h3 id="totalAmount">$0</h3>
+              <div style="font-size:13px;opacity:0.9;margin-top:8px" id="totalNote">Please select at least one option to continue</div>
+            </div>
+            <div>
+              <button class="confirm-btn" onclick="confirmSelections()">Confirm Booking</button>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAGE 4: Confirmation -->
+  <section class="page" id="page-4">
+    <div class="container">
+      <div class="thanks">
+        <h1 id="finalTitle">Thank you!</h1>
+        <p id="finalSummary" style="color:var(--muted)"></p>
+        <div style="margin-top:20px">
+          <button class="btn" onclick="startOver()">Start Over</button>
+          <a class="btn ghost" href="#" onclick="showPage(2);return false;">Browse Destinations</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Modal (used for registration success + final confirm) -->
+  <div class="modal-back" id="modalBack" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true">
+      <h3 id="modalTitle">Success</h3>
+      <p id="modalMessage"></p>
+      <div style="text-align:right;margin-top:18px">
+        <button class="btn ghost" onclick="closeModal()">Close</button>
+        <button class="btn" id="modalPrimary" onclick="modalPrimaryAction()">Continue</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  /* ------------------ Basic page switching ------------------ */
+  function showPage(n){
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page-' + n).classList.add('active');
+    // update header active link
+    ['nav-home','nav-blog','nav-calc','nav-final'].forEach(id => document.getElementById(id).classList.remove('active'));
+    if(n===1) document.getElementById('nav-home').classList.add('active');
+    if(n===2) document.getElementById('nav-blog').classList.add('active');
+    if(n===3) document.getElementById('nav-calc').classList.add('active');
+    if(n===4) document.getElementById('nav-final').classList.add('active');
+    // scroll top
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+  function goToPage(n){ showPage(n); }
+
+  /* --------------- Registration validation & modal --------------- */
+  const regForm = document.getElementById('regForm');
+  const errors = {
+    name: document.getElementById('err-name'),
+    email: document.getElementById('err-email'),
+    phone: document.getElementById('err-phone'),
+    pin: document.getElementById('err-pin')
+  };
+  const modalBack = document.getElementById('modalBack');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalMessage = document.getElementById('modalMessage');
+  const modalPrimary = document.getElementById('modalPrimary');
+
+  function validateEmail(v){
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+  }
+  function validatePhone(v){ return /^\d{10}$/.test(v); }
+  function validatePin(v){ return /^\d{6}$/.test(v); }
+
+  // Real-time validation
+  ['fullname','email','phone','pin'].forEach(id => {
+    const el = document.getElementById(id);
+    el.addEventListener('input', () => {
+      if(id==='fullname') errors.name.style.display = el.value.trim() ? 'none' : 'block';
+      if(id==='email') errors.email.style.display = validateEmail(el.value) ? 'none' : 'block';
+      if(id==='phone') errors.phone.style.display = validatePhone(el.value) ? 'none' : 'block';
+      if(id==='pin') errors.pin.style.display = validatePin(el.value) ? 'none' : 'block';
+    });
+  });
+
+  regForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = regForm.fullname.value.trim();
+    const email = regForm.email.value.trim();
+    const phone = regForm.phone.value.trim();
+    const pin = regForm.pin.value.trim();
+
+    let ok = true;
+    if(!name){ errors.name.style.display='block'; ok=false; } else errors.name.style.display='none';
+    if(!validateEmail(email)){ errors.email.style.display='block'; ok=false; } else errors.email.style.display='none';
+    if(!validatePhone(phone)){ errors.phone.style.display='block'; ok=false; } else errors.phone.style.display='none';
+    if(!validatePin(pin)){ errors.pin.style.display='block'; ok=false; } else errors.pin.style.display='none';
+
+    if(!ok) return;
+
+    // show success modal then navigate to page 2
+    openModal('Registration Success', `Welcome, ${name}! Your registration was successful. Click continue to explore destinations.`, () => {
+      closeModal();
+      // store name for later
+      window._vf_user = {name,email,phone,pin};
+      showPage(2);
+    });
+  });
+
+  /* ---------------- Blog tab smooth scroll and tab active ---------------- */
+  document.querySelectorAll('#blogTabs a').forEach(a => {
+    a.addEventListener('click', (ev) => {
+      ev.preventDefault();
+      const target = document.getElementById(a.dataset.target);
+      target.scrollIntoView({behavior:'smooth',block:'start'});
+      // set active
+      document.querySelectorAll('#blogTabs a').forEach(x => x.classList.remove('active'));
+      a.classList.add('active');
+    });
+  });
+
+  // Helper used by the Explore buttons
+  function scrollToNext(targetId){
+    const el = document.getElementById(targetId);
+    if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+
+  /* ---------------- Price calculator logic ---------------- */
+  const priceCheckboxes = document.querySelectorAll('.price-checkbox');
+  const flightRadios = document.querySelectorAll('input[name="flight"]');
+  const totalAmountEl = document.getElementById('totalAmount');
+  const totalNote = document.getElementById('totalNote');
+  function calcTotal(){
+    let total = 0;
+    // flight (single choice)
+    document.querySelectorAll('input[name="flight"]').forEach(r => {
+      if(r.checked) total += Number(r.dataset.price || 0);
+    });
+    // extras
+    document.querySelectorAll('.price-checkbox').forEach(cb => {
+      if(cb.checked) total += Number(cb.dataset.price || 0);
+    });
+    totalAmountEl.textContent = '$' + total;
+    totalNote.textContent = total>0 ? 'Ready to confirm your booking' : 'Please select at least one option to continue';
+    return total;
+  }
+  // attach events
+  document.querySelectorAll('input').forEach(i => i.addEventListener('change', calcTotal));
+
+  // Confirm selections -> modal then page 4
+  function confirmSelections(){
+    const total = calcTotal();
+    if(total <= 0){
+      openModal('No items selected', 'Please select at least one option to proceed.', () => closeModal());
+      return;
+    }
+    // gather selections summary
+    const chosen = [];
+    document.querySelectorAll('input[name="flight"]').forEach(r => { if(r.checked) chosen.push(`${r.value} ($${r.dataset.price})`); });
+    document.querySelectorAll('.price-checkbox').forEach(cb => { if(cb.checked) chosen.push(`${cb.value} ($${cb.dataset.price})`); });
+
+    openModal('Confirm Booking', `You have selected:\n\n- ${chosen.join('\n- ')}\n\nTotal: $${total}\n\nClick Continue to finish.`, () => {
+      // finalize: show page 4 summary
+      closeModal();
+      window._vf_booking = {items:chosen, total};
+      document.getElementById('finalTitle').textContent = 'Booking Simulated — Thank you!';
+      document.getElementById('finalSummary').innerHTML = `<strong>${window._vf_user?.name || 'Guest'}</strong>, your simulated booking total is <strong>$${total}</strong>. We saved your selections for this session.`;
+      showPage(4);
+    });
+  }
+
+  /* ---------------- Modal helpers ---------------- */
+  function openModal(title, message, primaryAction){
+    modalTitle.textContent = title;
+    // preserve line breaks in message
+    modalMessage.innerHTML = message.replace(/\n/g,'<br>');
+    modalBack.classList.add('show');
+    // attach primary action
+    modalPrimary.onclick = () => {
+      if(typeof primaryAction === 'function') primaryAction();
+    };
+    // ensure aria
+    modalBack.setAttribute('aria-hidden','false');
+  }
+  function closeModal(){
+    modalBack.classList.remove('show');
+    modalBack.setAttribute('aria-hidden','true');
+  }
+  function modalPrimaryAction(){ /* placeholder - overwritten by openModal */ }
+
+  /* ---------------- Start over ---------------- */
+  function startOver(){
+    // reset forms & selections
+    regForm.reset();
+    document.querySelectorAll('.price-checkbox').forEach(cb => cb.checked = false);
+    document.querySelectorAll('input[name="flight"]').forEach(r => r.checked = false);
+    calcTotal();
+    window._vf_user = null;
+    window._vf_booking = null;
+    showPage(1);
+    closeModal();
+  }
+
+  // init calc on load
+  calcTotal();
+
+  // allow pressing Enter in blog section buttons to navigate
+  // accessibility: close modal on Esc
+  document.addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); });
+
+  // If user directly opens anchor (like #paris) while on page 2, smooth scroll
+  if(location.hash){
+    const h = location.hash.replace('#','');
+    // if matches section id, show blog page and scroll
+    if(document.getElementById(h)){
+      showPage(2);
+      setTimeout(()=>document.getElementById(h).scrollIntoView({behavior:'smooth'}),300);
+    }
+  }
+</script>
+</body>
+</html>
